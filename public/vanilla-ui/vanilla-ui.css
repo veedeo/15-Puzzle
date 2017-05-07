@@ -47,6 +47,7 @@ body.busy .busy-overlay .text{
 .controls button:hover{background: #003333;}
 
 #root{
+	transform: translateZ(0);
     background-color: #222;
     position: relative;
     width: 336px;
