@@ -130,7 +130,7 @@ class Tile
 
 		this.rootElement.appendChild(this.cell);
 
-		this.cell.addEventListener('tap', (e) => {
+		this.cell.addEventListener('click', (e) => {
 			if (onClick)
 				onClick(this);
 		});
