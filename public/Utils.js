@@ -17,6 +17,19 @@ class Utils {
 	{
 		return position.y*xLength+position.x;
 	}
+	static isSolved(arr)
+	{
+		if (arr[15] != 0)
+			return false;
+
+		for (var i = 0; i < arr.length - 2; i++) {
+		    if (arr[i] > arr[i+1]) {
+		        return false;
+		    }
+		}
+		return true;
+
+	}
 	static getAdjacents(index, xLength)
 	{
 		const position = Utils.getPositionByIndex(index, xLength);

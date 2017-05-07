@@ -37,6 +37,10 @@ class GameController
 		
 		this.board = board;
 		this.dispatch({type: 'UPDATE_TILES', board});
+
+		if (Utils.isSolved(board))
+			this.dispatch({type: 'WIN'});
+
 	}
 
 	moveTile(positionIndex, resetSolution = true)
@@ -65,9 +69,9 @@ class GameController
 		this.puzzleSolver
 			.generateNewBoard()
 			.then(board => {
-				this.clearUndo();
-				this.updateBoard(board, true);
 				this.dispatch({type: 'BUSY_STATUS', status: false});
+				this.clearUndo();
+				this.updateBoard(board, true);				
 			})
 			.catch(() => this.dispatch({type: 'BUSY_STATUS', status: false}))
 	}
@@ -89,11 +93,11 @@ class GameController
 			this.puzzleSolver
 				.solve(this.board)
 				.then(solution => {
-					console.log('got solution', solution)
+					console.log('got solution', solution);
+					this.dispatch({type: 'BUSY_STATUS', status: false});
 					this.hasSolution = true;
 					this.solvedSolution = solution.slice();
 					this.help(solve);
-					this.dispatch({type: 'BUSY_STATUS', status: false});
 				})
 				.catch(() => this.dispatch({type: 'BUSY_STATUS', status: false}))
 			return;

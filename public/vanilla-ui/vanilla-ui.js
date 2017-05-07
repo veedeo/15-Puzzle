@@ -35,12 +35,19 @@ class VanillaUI
 	}
 	onGameEvent(event)
 	{
+		this.renderQueue.enqueue(()=>this.proccessEvent(event));
+	}
+	proccessEvent(event)
+	{
 		switch(event.type) {
 		    case 'UPDATE_TILES':
-		        this.renderQueue.enqueue(()=>this.renderMove(event.board));
+		        this.renderMove(event.board);
 		        break;
 		    case 'BUSY_STATUS':
 		        document.body.className = event.status ? 'busy' : '';
+		        break;
+	        case 'WIN':
+		        new Audio('vanilla-ui/win.mp3').play();
 		        break;
 		    default:
 		        console.log('unknown event', event)
