@@ -12,7 +12,8 @@ class GameController
 	}
 	init()
 	{
-		this.dispatchBoardChange();
+		//this.dispatchBoardChange(false);
+		this.history.init(this.board.getTiles());
 	}
 	setEventListener(callback)
 	{
@@ -129,6 +130,14 @@ class GameController
 	}
 }
 
+class StateManager
+{
+	constructor()
+	{
+		
+	}
+}
+
 class History
 {
 	constructor()
@@ -140,7 +149,11 @@ class History
 	{
 		this.eventListener = callback;
 	}
-
+	init(tiles)
+	{
+		if (this.eventListener)
+			this.eventListener(tiles);
+	}
 	clear()
 	{
 		this.undos = [];
@@ -194,6 +207,15 @@ class RemoteHistory extends History
 					this.eventListener(snapshot.val());
 			});
 	}
+	init()
+	{
+		this.firebaseDb
+			.ref('puzzle15/' + this.roomName)
+			.once('value', (snapshot) => {
+				if (this.eventListener)
+					this.eventListener(snapshot.val());
+			});
+	}
 	update(board)
 	{
 		firebase.database().ref('puzzle15/' + this.roomName).set(board);
@@ -203,9 +225,11 @@ class RemoteHistory extends History
 	}
 	undo()
 	{
+		alert('not implemented');
 	}
 	redo()
 	{
+		alert('not implemented');
 	}
 }
 
