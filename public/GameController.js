@@ -151,6 +151,7 @@ class History
 	}
 	init(tiles)
 	{
+		this.update(tiles);
 		if (this.eventListener)
 			this.eventListener(tiles);
 	}
