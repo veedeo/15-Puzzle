@@ -112,19 +112,20 @@ class RenderQueue
 
 class Tile
 {
-	constructor(rootElement, tileNumber, initialPosition, onClick) {
+	constructor(rootElement, tileNumber, position, onClick) {
 		this.rootElement = rootElement;
 		this.tileNumber = tileNumber;
-		this.position = initialPosition;
+		this.position = position;
 
-		const pos = Utils.getPositionByIndex(initialPosition, 4);
+		const pos = Utils.getPositionByIndex(position, 4);
+		const initialPosition = Utils.getPositionByIndex(tileNumber, 4);
 
 		const cell = document.createElement('span');
 		cell.id = 'cell-' + tileNumber
 		cell.style.left = (pos.x*80+pos.x*5)+'px';
 		cell.style.top = (pos.y*80+pos.y*5)+'px';
 		cell.classList.add('number');
-		cell.classList.add((pos.y%2==0 && pos.x%2>0 || pos.y%2>0 && pos.x%2==0) ? 'dark' : 'light');
+		cell.classList.add((initialPosition.y%2==0 && initialPosition.x%2>0 || initialPosition.y%2>0 && initialPosition.x%2==0) ? 'dark' : 'light');
 		cell.innerHTML = tileNumber;
 		this.cell = cell;
 
