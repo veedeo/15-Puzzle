@@ -1,8 +1,5 @@
 const express = require("express");
-const LocalSolver = require("./public/LocalSolver");
-const Utils = require("./public/Utils");
-//import { LocalSolver } from 'public/LocalSolver';
-
+const OptimalSolver = require("./public/OptimalSolver");
 
 const app = express();
 
@@ -10,7 +7,7 @@ const app = express();
 app.use(express.static(__dirname + '/public'));
 
 app.get('/generateNewBoard', function (req, res) {
-	const puzzleSolver = new LocalSolver();
+	const puzzleSolver = new OptimalSolver();
 	
 	puzzleSolver
 		.generateNewBoard()
@@ -18,7 +15,7 @@ app.get('/generateNewBoard', function (req, res) {
 })
 
 app.get('/getRandomMoves', function (req, res) {
-	const puzzleSolver = new LocalSolver();
+	const puzzleSolver = new OptimalSolver();
 	
 	puzzleSolver
 		.getRandomMoves(req.query.emptyTilePosition, req.query.moves)
@@ -27,7 +24,7 @@ app.get('/getRandomMoves', function (req, res) {
 
 app.get('/solve', function (req, res) {
 	console.log('solve', req.query)
-	const puzzleSolver = new LocalSolver();
+	const puzzleSolver = new OptimalSolver();
 	
 	puzzleSolver
 		.solve(JSON.parse('['+req.query.board+']'))
