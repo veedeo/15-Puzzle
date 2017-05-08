@@ -27,11 +27,12 @@ class GameController
 	onHistoryChange(tiles)
 	{
 		this.board.update(tiles);
-		this.dispatchBoardChange()
+		this.dispatchBoardChange(false)
 	}
-	dispatchBoardChange()
+	dispatchBoardChange(saveHistory=true)
 	{
-		this.history.update(this.board.getTiles());
+		if (saveHistory)
+			this.history.update(this.board.getTiles());
 
 		this.dispatch({
 			type: 'UPDATE_TILES',
@@ -148,13 +149,15 @@ class History
 	update(board)
 	{
 		if (this.undoPosition >= 0 && Utils.arraysEqual(this.undos[this.undoPosition], board))
-			return;
+			return false;
 
 		if (this.undoPosition < this.undos.length-1)
 			this.undos = this.undos.slice(0, this.undoPosition+1);
 
 		this.undos.push(board);
 		this.undoPosition++;
+
+		return true;
 	}
 	undo()
 	{
@@ -186,12 +189,23 @@ class RemoteHistory extends History
 
 		this.firebaseDb
 			.ref('puzzle15/' + this.roomName)
-			.on('value', (snapshot) => super.update(snapshot.val()));
+			.on('value', (snapshot) => {
+				if (this.eventListener)
+					this.eventListener(snapshot.val());
+			});
 	}
 	update(board)
 	{
 		firebase.database().ref('puzzle15/' + this.roomName).set(board);
-		super.update(board);
+	}
+	clear()
+	{
+	}
+	undo()
+	{
+	}
+	redo()
+	{
 	}
 }
 
