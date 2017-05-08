@@ -118,7 +118,7 @@ class Tile
 		this.position = position;
 
 		const pos = Utils.getPositionByIndex(position, 4);
-		const initialPosition = Utils.getPositionByIndex(tileNumber, 4);
+		const initialPosition = Utils.getPositionByIndex(tileNumber-1, 4);
 
 		const cell = document.createElement('span');
 		cell.id = 'cell-' + tileNumber
