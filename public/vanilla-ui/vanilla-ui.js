@@ -5,7 +5,7 @@ class VanillaUI
 	constructor({rootElement, gameController}) {
 		this.rootElement = rootElement;
 		this.gameController = gameController;
-		this.gameController.setListener(this.onGameEvent.bind(this));
+		this.gameController.setEventListener(this.onGameEvent.bind(this));
 		
 		document
 			.getElementById('new')

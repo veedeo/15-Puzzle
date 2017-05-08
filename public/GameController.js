@@ -2,45 +2,44 @@
 
 class GameController
 {
-	constructor({puzzleSolver}){
+	constructor({puzzleSolver, historyProvider=new History()}){
 		this.puzzleSolver = puzzleSolver;
-		this.clearUndo();
+		
+		this.history = historyProvider;
+		this.history.setEventListener(this.onHistoryChange.bind(this));
+
+		this.board = new Board();
 	}
 	init()
 	{
-		this.updateBoard(Utils.initialBoard);
+		this.dispatchBoardChange();
 	}
-	setListener(callback)
+	setEventListener(callback)
 	{
 		this.moveListener = callback;
 	}
-	clearUndo()
-	{
-		this.undos = [];
-		this.undoPosition = -1;
-	}
+	
 	dispatch(event)
 	{
 		if (this.moveListener)
 			this.moveListener(event);
 	}
-	updateBoard(board, saveUndo = true)
+	onHistoryChange(tiles)
 	{
-		if (saveUndo)
-		{
-			if (this.undoPosition < this.undos.length-1)
-				this.undos = this.undos.slice(0, this.undoPosition+1);
+		this.board.update(tiles);
+		this.dispatchBoardChange()
+	}
+	dispatchBoardChange()
+	{
+		this.history.update(this.board.getTiles());
 
-			this.undos.push(board);
-			this.undoPosition++;
-		}
-		
-		this.board = board;
-		this.dispatch({type: 'UPDATE_TILES', board});
+		this.dispatch({
+			type: 'UPDATE_TILES',
+			board: this.board.getTiles()
+		});
 
-		if (Utils.isSolved(board))
+		if (this.board.isSolved())
 			this.dispatch({type: 'WIN'});
-
 	}
 
 	moveTile(positionIndex, resetSolution = true)
@@ -48,37 +47,35 @@ class GameController
 		if (resetSolution)
 			this.hasSolution = false;
 
-		const empyTilePosition = this.board.indexOf(0);
-		const adjacents = Utils.getAdjacents(positionIndex, 4);
-		if (adjacents.indexOf(empyTilePosition) < 0)
+		const success = this.board.moveTile(positionIndex);
+		if (!success)
 		{
-			console.log('bad move')
-			return;
+			console.log('bad move');
+			return
 		}
-
-		var board = this.board.slice();
-		board[empyTilePosition] = board[positionIndex];
-		board[positionIndex] = 0;
 		
-		this.updateBoard(board);
+		this.dispatchBoardChange();
 	}
 	newGame()
 	{
 		this.hasSolution = false;
 		this.dispatch({type: 'BUSY_STATUS', status: true});
+
 		this.puzzleSolver
 			.generateNewBoard()
-			.then(board => {
+			.then(tiles => {
 				this.dispatch({type: 'BUSY_STATUS', status: false});
-				this.clearUndo();
-				this.updateBoard(board, true);				
+				this.history.clear();
+				this.board.update(tiles);
+				this.dispatchBoardChange();
 			})
 			.catch(() => this.dispatch({type: 'BUSY_STATUS', status: false}))
 	}
 	shuffle()
 	{
 		this.hasSolution = false;
-		const empyTilePosition = this.board.indexOf(0);
+
+		const empyTilePosition = this.board.getEmptyTilePosition(0);
 		this.puzzleSolver.getRandomMoves(empyTilePosition, 40).then(moves=>{
 			for(var i = 0; i < moves.length; i++){
 				this.moveTile(moves[i]);
@@ -91,7 +88,7 @@ class GameController
 		{
 			this.dispatch({type: 'BUSY_STATUS', status: true});
 			this.puzzleSolver
-				.solve(this.board)
+				.solve(this.board.getTiles())
 				.then(solution => {
 					console.log('got solution', solution);
 					this.dispatch({type: 'BUSY_STATUS', status: false});
@@ -120,23 +117,130 @@ class GameController
 
 	undo()
 	{
+		this.hasSolution = false;
+		this.history.undo();
+	}
+
+	redo()
+	{
+		this.hasSolution = false;
+		this.history.redo();
+	}
+}
+
+class History
+{
+	constructor()
+	{
+		this.clear();
+	}
+
+	setEventListener(callback)
+	{
+		this.eventListener = callback;
+	}
+
+	clear()
+	{
+		this.undos = [];
+		this.undoPosition = -1;
+	}
+	update(board)
+	{
+		if (this.undoPosition >= 0 && Utils.arraysEqual(this.undos[this.undoPosition], board))
+			return;
+
+		if (this.undoPosition < this.undos.length-1)
+			this.undos = this.undos.slice(0, this.undoPosition+1);
+
+		this.undos.push(board);
+		this.undoPosition++;
+	}
+	undo()
+	{
 		if (this.undoPosition <= 0)
 			return;
 
-		this.hasSolution = false;
-
 		this.undoPosition--;
-		this.updateBoard(this.undos[this.undoPosition], false);
+		if (this.eventListener)
+			this.eventListener(this.undos[this.undoPosition]);
 	}
-
 	redo()
 	{
 		if (this.undoPosition >= this.undos.length-1)
 			return;
 
-		this.hasSolution = false;
-
 		this.undoPosition++;
-		this.updateBoard(this.undos[this.undoPosition], false);
+		if (this.eventListener)
+			this.eventListener(this.undos[this.undoPosition]);
+	}
+}
+
+class RemoteHistory extends History
+{
+	constructor(firebaseDb, roomName='default')
+	{
+		super();
+		this.firebaseDb = firebaseDb;
+		this.roomName = roomName;
+
+		this.firebaseDb
+			.ref('puzzle15/' + this.roomName)
+			.on('value', (snapshot) => super.update(snapshot.val()));
+	}
+	update(board)
+	{
+		firebase.database().ref('puzzle15/' + this.roomName).set(board);
+		super.update(board);
+	}
+}
+
+class Board
+{
+	constructor(tiles=Board.initialBoard, size=4)
+	{
+		this.size = size;
+		this.tiles = tiles;
+	}
+	static get initialBoard()
+	{
+		return [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0];
+	}
+
+	getTiles()
+	{
+		return this.tiles.slice();
+	}
+
+	getEmptyTilePosition()
+	{
+		return this.tiles.indexOf(0);
+	}
+
+	moveTile(positionIndex)
+	{
+		const empyTilePosition = this.getEmptyTilePosition();
+		const adjacents = Utils.getAdjacents(positionIndex, this.size);
+		
+		// bad move
+		if (adjacents.indexOf(empyTilePosition) < 0)
+		{
+			return false;
+		}
+
+		this.tiles[empyTilePosition] = this.tiles[positionIndex];
+		this.tiles[positionIndex] = 0;
+
+		return true;
+	}
+
+	isSolved()
+	{
+		return Utils.isSolved(this.tiles);
+	}
+
+	update(tiles)
+	{
+		this.tiles = tiles.slice();
 	}
 }

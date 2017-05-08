@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Wix interview 15 puzzle, vanillaJS UI</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="vanilla-ui/vanilla-ui.css">
+</head>
+<body>
+	<div class="busy-overlay">
+		<div class="text">
+			Loading ...
+		</div>
+	</div>
+	<div class="controls">
+		<button id="undo">undo</button>
+		<button id="new">New</button>
+		<button id="redo">redo</button>
+	</div>
+	<div id="root" class="animate"></div>
+	<div class="controls">
+		<button id="shuffle">Shuffle</button>
+		<button id="help">Help</button>
+		<button id="solve">Solve</button>
+	</div>
+	<script src="https://www.gstatic.com/firebasejs/3.9.0/firebase.js"></script>
+
+	<script src="Utils.js"></script>
+	<script src="RemoteSolver.js"></script>
+	<script src="GameController.js"></script>
+	<script src="vanilla-ui/vanilla-ui.js"></script>
+	<script>
+		var config = {
+			apiKey: "AIzaSyApHjECUPyS1g_4muHt7M9sLYueBIywvi4",
+		    authDomain: "chalk-c68a3.firebaseapp.com",
+		    databaseURL: "https://chalk-c68a3.firebaseio.com",
+		    projectId: "chalk-c68a3",
+		    storageBucket: "chalk-c68a3.appspot.com",
+		    messagingSenderId: "1010088990833"
+		};
+
+		firebase.initializeApp(config);
+		var firebaseDb = firebase.database();
+
+		var rootElement = document.getElementById('root');
+		var puzzleSolver = new RemoteSolver();
+		var historyProvider = new RemoteHistory(firebaseDb);
+		var gameController = new GameController({puzzleSolver, historyProvider});
+		var ui = new VanillaUI({rootElement, gameController});
+		gameController.init();
+	</script>
+</body>
+</html>
