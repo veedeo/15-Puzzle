@@ -1,5 +1,5 @@
-# wix-15-puzzle
-15 Puzzle game developed as a coding challenge for a job interview at Wix.
+# 15-puzzle
+15 Puzzle game developed for fun
 Tested on Chrome mobile/desktop
 
 Everything is written in VanillaJS without any third party libraries.
